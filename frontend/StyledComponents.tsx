@@ -9,6 +9,7 @@ import {
 	Divider,
 	Button,
 	Typography,
+	Select,
 } from "antd";
 const { Sider, Content } = Layout;
 
@@ -291,5 +292,12 @@ export const StyledFormItemToolbar = styled.div`
 		color: white;
 		background-color: #10bcf2;
 		background-image: none;
+	}
+`;
+
+export const StyledSelect = styled(Select)`
+	.ant-select-selection-placeholder {
+		color: rgba(0, 0, 0, 0.65);
+		opacity: unset;
 	}
 `;

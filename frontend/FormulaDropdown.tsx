@@ -8,9 +8,8 @@ import { observer } from "mobx-react-lite";
 
 import { Select } from "antd";
 const { Option } = Select;
-import { DownOutlined } from "@ant-design/icons";
 
-import { useBase } from "@airtable/blocks/ui";
+import { StyledSelect } from "./StyledComponents";
 
 import viewModel from "./FormulaViewModel";
 
@@ -22,6 +21,7 @@ const FormulaDropdown = () => {
 
 	const onChange = (value) => {
 		log.debug("FormulaDropdown.onChange, value:", value);
+		viewModel.insertFormula(value);
 	};
 
 	const filterOption = (input, option) => {
@@ -41,11 +41,12 @@ const FormulaDropdown = () => {
 	// }
 
 	return (
-		<Select
+		<StyledSelect
 			showSearch
 			placeholder="Insert a formula"
 			optionFilterProp="children"
 			onChange={onChange}
+			value={null}
 			// onFocus={onFocus}
 			// onBlur={onBlur}
 			// onSearch={onSearch}
@@ -59,7 +60,7 @@ const FormulaDropdown = () => {
 					</Option>
 				);
 			})}
-		</Select>
+		</StyledSelect>
 	);
 };
 

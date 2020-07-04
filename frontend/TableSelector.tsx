@@ -27,7 +27,7 @@ const TableSelector = observer(() => {
 
 	return (
 		<StyledFormItem
-			label="Table to run calculations in:"
+			label="Table to run calculations in"
 			rules={[{ required: true, message: "Please select a table" }]}
 		>
 			<Select onSelect={onSelect} value={viewModel.tableId}>

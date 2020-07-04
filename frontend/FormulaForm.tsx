@@ -9,6 +9,8 @@ import { observer } from "mobx-react-lite";
 
 import { Form, Input } from "antd";
 
+import styled from "styled-components";
+
 import { base, cursor } from "@airtable/blocks";
 import { useLoadable, useWatchable, useRecordById } from "@airtable/blocks/ui";
 
@@ -18,6 +20,20 @@ import FormulaDropdown from "./FormulaDropdown";
 import FormulaEditor from "./FormulaEditor";
 import { StyledSubmitButton, StyledFormItem } from "./StyledComponents";
 import viewModel from "./FormulaViewModel";
+import FieldSelector from "./FieldSelector";
+
+const StyledResultInput = styled(Input)`
+	&& {
+		width: 100%;
+		background-color: white;
+		color: rgba(0, 0, 0, 0.65);
+		text-align: center;
+	}
+
+	&&::placeholder {
+		text-align: center;
+	}
+`;
 
 const FormulaForm = observer(() => {
 	log.debug("FormulaForm.render");
@@ -36,44 +52,59 @@ const FormulaForm = observer(() => {
 			: ("" as any)
 	);
 
-	const onPreview = () => {
-		log.debug("FormulaForm.preview");
-		const result = viewModel.preview(record);
-		log.debug("result:", toJS(result));
+	viewModel.selectedRecord = record;
+
+	const onRun = () => {
+		log.debug("FormulaForm.onRun");
+		const result = viewModel.run(record);
+		log.debug("FormulaForm.onRun, result:", toJS(result));
 	};
 
-	const parseResult = viewModel.parseResult;
-	let previewValue = null;
-	if (parseResult != null) {
-		previewValue =
-			parseResult.error != null ? parseResult.error : parseResult.result;
-	}
+	const onRunAndSave = () => {
+		log.debug("FormulaForm.onRun");
+		viewModel.runAndSave(record);
+	};
 
 	return (
 		<Form layout="vertical">
 			<TableSelector />
+			<FieldSelector />
 			<FieldsDropdown />
 			<FormulaDropdown />
 			<FormulaEditor />
 			<StyledFormItem>
-				<Input
+				<StyledResultInput
+					id="result"
 					placeholder="Result on selected record"
-					value={previewValue}
+					value={viewModel.runResultFormValue}
 					disabled={true}
-					style={{ width: "100%" }}
 				/>
 			</StyledFormItem>
 			<StyledSubmitButton
-				id="submit"
+				id="run"
 				type="primary"
-				// htmlType="submit"
-				// loading={field.isCreating}
-				// justified="true"
-				disabled={record == null ? true : undefined}
-				onClick={onPreview}
+				justified="true"
+				disabled={viewModel.disableRun}
+				onClick={onRun}
 			>
-				Preview on selected record
+				Run on selected record
 			</StyledSubmitButton>
+			<StyledFormItem
+				validateStatus={viewModel.saveStatus}
+				help={viewModel.saveStatusMessage}
+			>
+				<StyledSubmitButton
+					id="save"
+					type="primary"
+					// htmlType="submit"
+					loading={viewModel.isSaving}
+					justified="true"
+					disabled={viewModel.disableRunAndSave}
+					onClick={onRunAndSave}
+				>
+					Run & save in selected record
+				</StyledSubmitButton>
+			</StyledFormItem>
 		</Form>
 	);
 });

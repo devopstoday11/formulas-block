@@ -8,7 +8,8 @@ import { observer } from "mobx-react-lite";
 
 import { Select } from "antd";
 const { Option } = Select;
-import { DownOutlined } from "@ant-design/icons";
+
+import { StyledSelect } from "./StyledComponents";
 
 import { useBase } from "@airtable/blocks/ui";
 
@@ -19,8 +20,9 @@ const FieldsDropdown = observer(() => {
 
 	const base = useBase();
 
-	const onChange = (value) => {
-		log.debug("FieldsDropdown.onChange, value:", value);
+	const onChange = (fieldName) => {
+		log.debug("FieldsDropdown.onChange, value:", fieldName);
+		viewModel.insertField(fieldName);
 	};
 
 	const filterOption = (input, option) => {
@@ -40,11 +42,12 @@ const FieldsDropdown = observer(() => {
 	// }
 
 	return (
-		<Select
+		<StyledSelect
 			showSearch
 			placeholder="Insert a field"
 			optionFilterProp="children"
 			onChange={onChange}
+			value={null}
 			// onFocus={onFocus}
 			// onBlur={onBlur}
 			// onSearch={onSearch}
@@ -53,12 +56,12 @@ const FieldsDropdown = observer(() => {
 		>
 			{viewModel.availableFields.map((field) => {
 				return (
-					<Option key={field.id} value={field.id}>
+					<Option key={field.id} value={field.name}>
 						{field.name}
 					</Option>
 				);
 			})}
-		</Select>
+		</StyledSelect>
 	);
 });
 
