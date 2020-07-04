@@ -383,7 +383,8 @@ export class FormulaViewModel {
 			case SaveStatus.success:
 				return "Successfully saved result";
 			case SaveStatus.error:
-				return this.saveError.message;
+				if (this.saveError) return this.saveError.message;
+				return null;
 		}
 	}
 }
@@ -407,6 +408,7 @@ decorate(FormulaViewModel, {
 	disableRunAndSave: computed,
 	run: action,
 	runAndSave: action,
+	save: action,
 	runResult: observable,
 	runResultFormValue: observable,
 	runError: observable,

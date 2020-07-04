@@ -244,10 +244,13 @@ export const StyledFormItemEditor = styled.div`
 	right: 0;
 `;
 
-// Decrease the big marging at the bottom of form items in settings forms
 export const StyledFormItem = styled(Form.Item)`
 	&& label:after {
 		display: inherit;
+	}
+
+	.ant-form-item-explain {
+		text-align: center;
 	}
 
 	/* margin-bottom: 8px !important; */
