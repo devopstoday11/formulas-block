@@ -26,6 +26,7 @@ const FieldSelector = observer(() => {
 		<StyledFormItem
 			label="Field to save calculations in"
 			rules={[{ required: true, message: "Please select a field" }]}
+			style={{ marginBottom: "16px" }}
 		>
 			<Select
 				onSelect={onSelect}

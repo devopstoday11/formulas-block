@@ -7,20 +7,21 @@ import React from "react";
 import { toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 
-import { Form, Input } from "antd";
+import { Form, Input, Progress } from "antd";
 
 import styled from "styled-components";
 
 import { base, cursor } from "@airtable/blocks";
 import { useLoadable, useWatchable, useRecordById } from "@airtable/blocks/ui";
 
+import viewModel, { CalculateInViewStatus } from "./FormulaViewModel";
+import { StyledSubmitButton, StyledFormItem } from "./StyledComponents";
 import TableSelector from "./TableSelector";
+import ViewSelector from "./ViewSelector";
+import FieldSelector from "./FieldSelector";
 import FieldsDropdown from "./FieldsDropdown";
 import FormulaDropdown from "./FormulaDropdown";
 import FormulaEditor from "./FormulaEditor";
-import { StyledSubmitButton, StyledFormItem } from "./StyledComponents";
-import viewModel from "./FormulaViewModel";
-import FieldSelector from "./FieldSelector";
 
 const StyledResultInput = styled(Input)`
 	&& {
@@ -61,34 +62,42 @@ const FormulaForm = observer(() => {
 	};
 
 	const onRunAndSave = () => {
-		log.debug("FormulaForm.onRun");
+		log.debug("FormulaForm.onRunAndSave");
 		viewModel.runAndSave(record);
+	};
+
+	const onCalculateInView = () => {
+		log.debug("FormulaForm.onCalculateInView");
+		viewModel.calculateInView();
 	};
 
 	return (
 		<Form layout="vertical">
 			<TableSelector />
+			<ViewSelector />
 			<FieldSelector />
 			<FieldsDropdown />
 			<FormulaDropdown />
 			<FormulaEditor />
-			<StyledFormItem>
+			<StyledFormItem style={{ marginBottom: "16px" }}>
 				<StyledResultInput
 					id="result"
-					placeholder="Result on selected record"
+					placeholder="Result for selected record"
 					value={viewModel.runResultFormValue}
 					disabled={true}
 				/>
 			</StyledFormItem>
-			<StyledSubmitButton
-				id="run"
-				type="primary"
-				justified="true"
-				disabled={viewModel.disableRun}
-				onClick={onRun}
-			>
-				Run on selected record
-			</StyledSubmitButton>
+			<StyledFormItem>
+				<StyledSubmitButton
+					id="run"
+					type="primary"
+					justified="true"
+					disabled={viewModel.disableRun}
+					onClick={onRun}
+				>
+					Run on selected record
+				</StyledSubmitButton>
+			</StyledFormItem>
 			<StyledFormItem
 				validateStatus={viewModel.saveStatus}
 				help={viewModel.saveStatusMessage}
@@ -102,10 +111,41 @@ const FormulaForm = observer(() => {
 					disabled={viewModel.disableRunAndSave}
 					onClick={onRunAndSave}
 				>
-					Run & save in selected record
+					Run & update selected record
 				</StyledSubmitButton>
 			</StyledFormItem>
+			<StyledFormItem
+				validateStatus={viewModel.calculateInViewButtonStatus}
+				help={viewModel.calculateInViewButtonStatusMessage}
+				style={{ marginBottom: "0px" }}
+			>
+				<StyledSubmitButton
+					id="calculateInView"
+					type="primary"
+					loading={viewModel.isCalculatingInView}
+					justified="true"
+					disabled={viewModel.disableCalculateInView}
+					onClick={onCalculateInView}
+				>
+					Run & update view
+				</StyledSubmitButton>
+			</StyledFormItem>
+			<CalculateInViewProgress />
 		</Form>
+	);
+});
+
+const CalculateInViewProgress = observer(() => {
+	if (viewModel.calculateInViewStatus == CalculateInViewStatus.none) {
+		return null;
+	}
+
+	return (
+		<Progress
+			style={{ width: "100%" }}
+			percent={viewModel.calculateInViewProgressPercent}
+			status={viewModel.calculateInViewProgressStatus}
+		/>
 	);
 });
 

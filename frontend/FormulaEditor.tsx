@@ -55,7 +55,7 @@ const FormulaEditor = observer(() => {
 				autoSize={{ minRows: 2 }}
 				value={viewModel.formula}
 				onChange={onChange}
-				style={{ marginTop: "24px" }}
+				style={{ marginTop: "16px", marginBottom: "8px" }}
 			/>
 		</StyledFormItem>
 	);

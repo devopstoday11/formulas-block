@@ -3,7 +3,11 @@ import { Layout } from "antd";
 import ErrorBoundary from "./ErrorBoundary";
 import BlockHeader from "./BlockHeader";
 import BlockFooter from "./BlockFooter";
-import { StyledFormContent, StyledFormLayout } from "./StyledComponents";
+import {
+	StyledFormContent,
+	StyledFormLayout,
+	StyledContent,
+} from "./StyledComponents";
 import FormulaForm from "./FormulaForm";
 
 export default function FormulasBlock() {

@@ -45,6 +45,7 @@ export const scrollbableStyle = css`
 `;
 
 export const StyledFormLayout = styled(Layout)`
+	${scrollbableStyle}
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -245,6 +246,8 @@ export const StyledFormItemEditor = styled.div`
 `;
 
 export const StyledFormItem = styled(Form.Item)`
+	margin-bottom: 8px;
+
 	&& label:after {
 		display: inherit;
 	}
@@ -252,8 +255,6 @@ export const StyledFormItem = styled(Form.Item)`
 	.ant-form-item-explain {
 		text-align: center;
 	}
-
-	/* margin-bottom: 8px !important; */
 
 	/* .ant-form-item-label {
 		text-align: left;
