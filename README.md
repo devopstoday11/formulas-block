@@ -4,6 +4,8 @@ Extendible formula calculator with out of the box support for 188 functions, inc
 
 This block can be extended with functions from dynamically loaded javascript files. See below for instructions.
 
+For a list of functions currently supported, see the [documentation site](https://formula.github.io/formula/docs/code/src/functions) of the formula library that this block uses.
+
 ## Installation
 
 1. This is a custom block. To install custom blocks, you need to join Airtable's custom blocks developer preview, by filling [this form](https://airtable.com/shrEvq5IlQqYxWkaS).
