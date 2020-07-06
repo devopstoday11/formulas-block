@@ -14,7 +14,7 @@ export class BlockViewModel {
 
 	constructor() {
 		log.debug("BlockViewModel.constructor");
-		this.activeView = MainView.addFunctions;
+		this.activeView = MainView.editFormula;
 	}
 
 	get switchViewButtonLabel(): string {

@@ -106,7 +106,7 @@ const FormulaForm = observer(() => {
 						disabled={true}
 					/>
 				</StyledFormItem>
-				<StyledFormItem>
+				<StyledFormItem {...viewModel.selectedRecordValidationProps}>
 					<StyledSubmitButton
 						id="run"
 						type="primary"

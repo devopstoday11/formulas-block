@@ -6,8 +6,7 @@ log.debug("FormulaViewModel");
 import chai from "chai";
 const { expect } = chai;
 
-import SupportedFunctions from "./SupportedFunctions";
-import { run /*, min, max*/ } from "formula";
+import { run /*, min, max*/ } from "@superblocks-at/formula";
 
 import {
 	// configure,
@@ -20,8 +19,9 @@ import {
 	IReactionDisposer,
 	flow,
 } from "mobx";
-
 // configure({ enforceActions: "observed" });
+
+import { fromPromise, IPromiseBasedObservable } from "mobx-utils";
 
 import { base, cursor, globalConfig } from "@airtable/blocks";
 import {
@@ -32,8 +32,9 @@ import {
 	Record,
 	ViewType,
 } from "@airtable/blocks/models";
-import { fromPromise, IPromiseBasedObservable } from "mobx-utils";
 import { loadScriptFromURLAsync } from "@airtable/blocks/ui";
+
+import SupportedFunctions from "./SupportedFunctions";
 
 export enum SaveStatus {
 	// We use antd form validationStatus warning, since it has a more appropriate color
@@ -73,7 +74,7 @@ interface FormulaModel {
 	} | null;
 	field: { id: string; name: string } | null;
 	formula: string;
-	functionScripts: Array<string>;
+	functionScripts: string[];
 }
 
 export class FormulaViewModel {
@@ -98,7 +99,7 @@ export class FormulaViewModel {
 	updatedRecords: number;
 	addedFunctions: { [name: string]: Function };
 	scriptURL: string;
-	functionScripts: Array<string>;
+	functionScripts: string[];
 	rerenderFunctionScripts: number;
 	loadingScripts: boolean;
 	showReloadBlockModal: boolean;
@@ -171,9 +172,7 @@ export class FormulaViewModel {
 
 	initSupportedFunctions(): void {
 		log.debug("FormulaViewModel.initSupportedFunctions");
-		for (const func of SupportedFunctions) {
-			this._supportedFunctions.add(func);
-		}
+		SupportedFunctions.forEach((func) => this._supportedFunctions.add(func));
 	}
 
 	addFunctions(funcs: { [name: string]: Function }): void {
@@ -213,8 +212,8 @@ export class FormulaViewModel {
 			}
 		}
 
-		this.formula = json.formula;
-		this.functionScripts = json.functionScripts;
+		if (json.formula) this.formula = json.formula;
+		if (json.functionScripts) this.functionScripts = json.functionScripts;
 
 		// alertsViewModel.addAlert(fieldJSON.id, {
 		// 	type: AlertType.warning,
@@ -364,17 +363,42 @@ export class FormulaViewModel {
 		return this.table.fields;
 	}
 
+	// don't return selected record if it's a selected record of another table
 	get selectedRecord() {
-		return this._selectedRecord;
+		log.debug("FormulaViewModel.get selectedRecord");
+		const _table = toJS(this._table);
+		const activeTableId = toJS(this.activeTableId);
+		if (!_table || (activeTableId && activeTableId == _table.id)) {
+			return this._selectedRecord;
+		}
+		return null;
 	}
 
 	set selectedRecord(value) {
-		// log.debug("FormulaViewModel.set selectedRecord");
+		log.debug("FormulaViewModel.set selectedRecord");
 		if (toJS(this._selectedRecord) != value) {
 			log.debug("FormulaViewModel.set selectedRecord, changed");
 			this._selectedRecord = value;
 			this.resetResult();
 		}
+	}
+
+	get selectedRecordValidationProps(): {
+		validateStatus?: "warning";
+		help?: string;
+	} {
+		if (
+			this._selectedRecord &&
+			this._table &&
+			this._table.id != this.activeTableId
+		) {
+			return {
+				validateStatus: "warning",
+				help: `The selected record is not in the ${this._table.name} table`,
+			};
+		}
+
+		return {};
 	}
 
 	get formula(): string {
