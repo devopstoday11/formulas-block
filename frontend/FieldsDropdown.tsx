@@ -16,7 +16,7 @@ import { useBase } from "@airtable/blocks/ui";
 import viewModel from "./FormulaViewModel";
 
 const FieldsDropdown = observer(() => {
-	log.debug("FieldsDropdown.enter");
+	log.debug("FieldsDropdown.render");
 
 	const base = useBase();
 

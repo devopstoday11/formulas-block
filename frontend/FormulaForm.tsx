@@ -7,12 +7,17 @@ import React from "react";
 import { toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 
-import { Form, Input, Progress } from "antd";
+import { Form, Input, Progress, Spin } from "antd";
 
 import styled from "styled-components";
 
 import { base, cursor } from "@airtable/blocks";
-import { useLoadable, useWatchable, useRecordById } from "@airtable/blocks/ui";
+import {
+	useLoadable,
+	useWatchable,
+	useRecordById,
+	loadScriptFromURLAsync,
+} from "@airtable/blocks/ui";
 
 import viewModel, { CalculateInViewStatus } from "./FormulaViewModel";
 import { StyledSubmitButton, StyledFormItem } from "./StyledComponents";
@@ -20,8 +25,18 @@ import TableSelector from "./TableSelector";
 import ViewSelector from "./ViewSelector";
 import FieldSelector from "./FieldSelector";
 import FieldsDropdown from "./FieldsDropdown";
-import FormulaDropdown from "./FormulaDropdown";
+import FunctionsDropdown from "./FunctionsDropdown";
 import FormulaEditor from "./FormulaEditor";
+
+// import { min, max } from "formula";
+// @ts-ignore
+// window.superblocks.formulas.addFunctions({ mymin: min, mymax: max });
+
+// import "@superblocks-at/formulajs-functions";
+
+// loadScriptFromURLAsync(
+// 	"https://unpkg.com/@superblocks-at/formulajs-functions@0.9.3/umd/functions.js"
+// );
 
 const StyledResultInput = styled(Input)`
 	&& {
@@ -72,66 +87,71 @@ const FormulaForm = observer(() => {
 	};
 
 	return (
-		<Form layout="vertical">
-			<TableSelector />
-			<ViewSelector />
-			<FieldSelector />
-			<FieldsDropdown />
-			<FormulaDropdown />
-			<FormulaEditor />
-			<StyledFormItem style={{ marginBottom: "16px" }}>
-				<StyledResultInput
-					id="result"
-					placeholder="Result for selected record"
-					value={viewModel.runResultFormValue}
-					disabled={true}
-				/>
-			</StyledFormItem>
-			<StyledFormItem>
-				<StyledSubmitButton
-					id="run"
-					type="primary"
-					justified="true"
-					disabled={viewModel.disableRun}
-					onClick={onRun}
+		<Spin
+			spinning={viewModel.loadingScripts}
+			tip="Loading added function scripts..."
+		>
+			<Form layout="vertical">
+				<TableSelector />
+				<ViewSelector />
+				<FieldSelector />
+				<FormulaEditor />
+				<FieldsDropdown />
+				<FunctionsDropdown />
+				<StyledFormItem style={{ marginTop: "16px", marginBottom: "16px" }}>
+					<StyledResultInput
+						id="result"
+						placeholder="Result for selected record"
+						value={viewModel.runResultFormValue}
+						disabled={true}
+					/>
+				</StyledFormItem>
+				<StyledFormItem>
+					<StyledSubmitButton
+						id="run"
+						type="primary"
+						justified="true"
+						disabled={viewModel.disableRun}
+						onClick={onRun}
+					>
+						Run on selected record
+					</StyledSubmitButton>
+				</StyledFormItem>
+				<StyledFormItem
+					validateStatus={viewModel.saveStatus}
+					help={viewModel.saveStatusMessage}
 				>
-					Run on selected record
-				</StyledSubmitButton>
-			</StyledFormItem>
-			<StyledFormItem
-				validateStatus={viewModel.saveStatus}
-				help={viewModel.saveStatusMessage}
-			>
-				<StyledSubmitButton
-					id="save"
-					type="primary"
-					// htmlType="submit"
-					loading={viewModel.isSaving}
-					justified="true"
-					disabled={viewModel.disableRunAndSave}
-					onClick={onRunAndSave}
+					<StyledSubmitButton
+						id="save"
+						type="primary"
+						// htmlType="submit"
+						loading={viewModel.isSaving}
+						justified="true"
+						disabled={viewModel.disableRunAndSave}
+						onClick={onRunAndSave}
+					>
+						Run & update selected record
+					</StyledSubmitButton>
+				</StyledFormItem>
+				<StyledFormItem
+					validateStatus={viewModel.calculateInViewButtonStatus}
+					help={viewModel.calculateInViewButtonStatusMessage}
+					style={{ marginBottom: "0px" }}
 				>
-					Run & update selected record
-				</StyledSubmitButton>
-			</StyledFormItem>
-			<StyledFormItem
-				validateStatus={viewModel.calculateInViewButtonStatus}
-				help={viewModel.calculateInViewButtonStatusMessage}
-				style={{ marginBottom: "0px" }}
-			>
-				<StyledSubmitButton
-					id="calculateInView"
-					type="primary"
-					loading={viewModel.isCalculatingInView}
-					justified="true"
-					disabled={viewModel.disableCalculateInView}
-					onClick={onCalculateInView}
-				>
-					Run & update view
-				</StyledSubmitButton>
-			</StyledFormItem>
-			<CalculateInViewProgress />
-		</Form>
+					<StyledSubmitButton
+						id="calculateInView"
+						type="primary"
+						loading={viewModel.isCalculatingInView}
+						justified="true"
+						disabled={viewModel.disableCalculateInView}
+						onClick={onCalculateInView}
+					>
+						Run & update view
+					</StyledSubmitButton>
+				</StyledFormItem>
+				<CalculateInViewProgress />
+			</Form>
+		</Spin>
 	);
 });
 

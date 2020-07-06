@@ -1,4 +1,4 @@
-const SupportedFormulas = [
+const SupportedFunctions = [
 	"ABS",
 	"ACCRINT",
 	"ACOS",
@@ -189,4 +189,4 @@ const SupportedFormulas = [
 	"YEARFRAC",
 ];
 
-export default SupportedFormulas;
+export default SupportedFunctions;

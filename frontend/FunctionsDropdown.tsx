@@ -1,5 +1,5 @@
 import loglevel from "loglevel";
-const log = loglevel.getLogger("FormulaDropdown");
+const log = loglevel.getLogger("FunctionsDropdown");
 log.setLevel("debug");
 
 import React from "react";
@@ -13,15 +13,15 @@ import { StyledSelect } from "./StyledComponents";
 
 import viewModel from "./FormulaViewModel";
 
-const FormulaDropdown = () => {
+const FunctionsDropdown = () => {
 	log.debug(
-		"FormulaDropdown.enter, supportedFormulas.length:",
-		viewModel.supportedFormulas.length
+		"FunctionsDropdown.render, supportedFunctions.length:",
+		viewModel.supportedFunctions.length
 	);
 
 	const onChange = (value) => {
-		log.debug("FormulaDropdown.onChange, value:", value);
-		viewModel.insertFormula(value);
+		log.debug("FunctionsDropdown.onChange, value:", value);
+		viewModel.insertFunction(value);
 	};
 
 	const filterOption = (input, option) => {
@@ -43,7 +43,7 @@ const FormulaDropdown = () => {
 	return (
 		<StyledSelect
 			showSearch
-			placeholder="Insert a formula"
+			placeholder="Insert a function"
 			optionFilterProp="children"
 			onChange={onChange}
 			value={null}
@@ -53,7 +53,7 @@ const FormulaDropdown = () => {
 			filterOption={filterOption}
 			style={{ width: "50%", paddingLeft: "4px" }}
 		>
-			{viewModel.supportedFormulas.map((name) => {
+			{viewModel.supportedFunctions.map((name) => {
 				return (
 					<Option key={name} value={name}>
 						{name}
@@ -64,4 +64,4 @@ const FormulaDropdown = () => {
 	);
 };
 
-export default FormulaDropdown;
+export default FunctionsDropdown;

@@ -6,12 +6,11 @@ log.debug("FormulaViewModel");
 import chai from "chai";
 const { expect } = chai;
 
-// import { SupportedFormulas, Parser } from "hot-formula-parser";
-import SupportedFormulas from "./SupportedFormulas";
-import { run } from "formula";
+import SupportedFunctions from "./SupportedFunctions";
+import { run /*, min, max*/ } from "formula";
 
 import {
-	configure,
+	// configure,
 	observable,
 	action,
 	computed,
@@ -34,6 +33,7 @@ import {
 	ViewType,
 } from "@airtable/blocks/models";
 import { fromPromise, IPromiseBasedObservable } from "mobx-utils";
+import { loadScriptFromURLAsync } from "@airtable/blocks/ui";
 
 export enum SaveStatus {
 	// We use antd form validationStatus warning, since it has a more appropriate color
@@ -73,6 +73,7 @@ interface FormulaModel {
 	} | null;
 	field: { id: string; name: string } | null;
 	formula: string;
+	functionScripts: Array<string>;
 }
 
 export class FormulaViewModel {
@@ -82,7 +83,7 @@ export class FormulaViewModel {
 	_view: View | null;
 	field: Field | null;
 	_selectedRecord: Record | null;
-	supportedFormulas: Array<string>;
+	_supportedFunctions: Set<string>;
 	_formula: string;
 	formulaTextArea: HTMLTextAreaElement;
 	runResult: any;
@@ -95,6 +96,12 @@ export class FormulaViewModel {
 	calculateInViewStatus: CalculateInViewStatus;
 	recordsToUpdateCount: number;
 	updatedRecords: number;
+	addedFunctions: { [name: string]: Function };
+	scriptURL: string;
+	functionScripts: Array<string>;
+	rerenderFunctionScripts: number;
+	loadingScripts: boolean;
+	showReloadBlockModal: boolean;
 
 	constructor() {
 		log.debug("FormulaViewModel.constructor");
@@ -104,7 +111,7 @@ export class FormulaViewModel {
 		this._view = null;
 		this.field = null;
 		this.selectedRecord = null;
-		this.supportedFormulas = SupportedFormulas;
+		this._supportedFunctions = new Set();
 		this._formula = "";
 		this.runResultFormValue = null;
 		this.runError = null;
@@ -114,12 +121,39 @@ export class FormulaViewModel {
 		this.calculateInViewError = null;
 		this.recordsToUpdateCount = 0;
 		this.updatedRecords = 0;
+		this.addedFunctions = {};
+		this.scriptURL = "";
+		this.functionScripts = [];
+		this.rerenderFunctionScripts = 0;
+		this.loadingScripts = false;
+		this.showReloadBlockModal = false;
 
 		const json = globalConfig.get("config") as FormulaModel;
 		this.fromJSON(json);
 
+		this.initSupportedFunctions();
+
 		cursor.watch(["activeTableId"], this.onActiveTableIdChange);
 		cursor.watch(["activeViewId"], this.onActiveViewIdChange);
+
+		// this.addFunctions({ mymin: min, mymax: max });
+
+		// @ts-ignore
+		if (!window.superblocks) {
+			// @ts-ignore
+			window.superblocks = {};
+		}
+		// @ts-ignore
+		if (!window.superblocks.formulas) {
+			// @ts-ignore
+			window.superblocks.formulas = {};
+		}
+		// @ts-ignore
+		window.superblocks.formulas.addFunctions = this.addFunctions.bind(this);
+
+		if (this.functionScripts.length > 0) {
+			this.loadScripts();
+		}
 
 		this.configSaver = autorun(
 			() => {
@@ -133,6 +167,25 @@ export class FormulaViewModel {
 			},
 			{ name: "FormulaViewModel.configSaver" }
 		);
+	}
+
+	initSupportedFunctions(): void {
+		log.debug("FormulaViewModel.initSupportedFunctions");
+		for (const func of SupportedFunctions) {
+			this._supportedFunctions.add(func);
+		}
+	}
+
+	addFunctions(funcs: { [name: string]: Function }): void {
+		log.debug("FormulaViewModel.addFunctions");
+		for (const funcName in funcs) {
+			log.debug("FormulaViewModel.addFunctions, adding", funcName);
+			const func = funcs[funcName];
+			expect(func).to.be.a("function");
+			this.addedFunctions[funcName.toUpperCase()] = funcs[funcName];
+			this.addedFunctions[funcName.toLowerCase()] = funcs[funcName];
+			this._supportedFunctions.add(funcName.toUpperCase());
+		}
 	}
 
 	// TODO Generate warnings if fields where deleted or changed and update server side model immediatelly
@@ -161,6 +214,7 @@ export class FormulaViewModel {
 		}
 
 		this.formula = json.formula;
+		this.functionScripts = json.functionScripts;
 
 		// alertsViewModel.addAlert(fieldJSON.id, {
 		// 	type: AlertType.warning,
@@ -192,20 +246,22 @@ export class FormulaViewModel {
 				  }
 				: null,
 			formula: toJS(this.formula),
+			functionScripts: toJS(this.functionScripts),
 		};
 	}
 
+	compareStrings(a: string, b: string): number {
+		return a.localeCompare(b);
+	}
+
 	// Generate unique array of supported formulas since SupportedFormulas has duplicates
-	initSupportedFormulas() {
-		const formulasSet: Set<string> = new Set();
-
-		for (const formula of SupportedFormulas) {
-			formulasSet.add(formula);
+	get supportedFunctions(): Array<string> {
+		const funcs = [];
+		for (const func of this._supportedFunctions) {
+			funcs.push(func);
 		}
-
-		for (const formula of formulasSet) {
-			this.supportedFormulas.push(formula);
-		}
+		funcs.sort(this.compareStrings);
+		return funcs;
 	}
 
 	onActiveTableIdChange(): void {
@@ -354,14 +410,16 @@ export class FormulaViewModel {
 
 		this.formulaTextArea.setRangeText(fieldName);
 		this.formulaTextArea.selectionStart += fieldName.length;
+		this.formula = this.formulaTextArea.value;
 		this.formulaTextArea.focus();
 	}
 
-	insertFormula(formula: string) {
+	insertFunction(func: string) {
 		expect(this.formulaTextArea).to.be.not.null;
 
-		this.formulaTextArea.setRangeText(formula);
-		this.formulaTextArea.selectionStart += formula.length;
+		this.formulaTextArea.setRangeText(func);
+		this.formulaTextArea.selectionStart += func.length;
+		this.formula = this.formulaTextArea.value;
 		this.formulaTextArea.focus();
 	}
 
@@ -390,7 +448,7 @@ export class FormulaViewModel {
 		}
 
 		try {
-			this.runResult = run(this._formula, values);
+			this.runResult = run(this._formula, values, this.addedFunctions);
 			if (this.runResult != null) {
 				this.runResultFormValue = this.runResult.toString();
 			} else {
@@ -430,7 +488,7 @@ export class FormulaViewModel {
 					const value = record.getCellValue(field);
 					values[field.name] = value;
 				}
-				const result = run(this._formula, values);
+				const result = run(this._formula, values, this.extraFuncs);
 				recordsToUpdate.push({
 					id: record.id,
 					fields: { [toJS(this.field.name)]: result },
@@ -592,6 +650,69 @@ export class FormulaViewModel {
 		}
 		return "success";
 	}
+
+	get scriptURLAlreadyExists(): boolean {
+		return (
+			this.functionScripts.findIndex((script) => script == this.scriptURL) >= 0
+		);
+	}
+
+	get scriptURLValidationProps(): {
+		validateStatus?: "error";
+		help?: string;
+	} {
+		if (this.scriptURLAlreadyExists) {
+			return {
+				validateStatus: "error",
+				help: "This script already exists",
+			};
+		}
+
+		return {};
+	}
+
+	get disableAddScriptButton(): boolean {
+		return this.scriptURL.length == 0 || this.scriptURLAlreadyExists;
+	}
+
+	addScript = flow(function* () {
+		this.loadingScripts = true;
+		try {
+			yield loadScriptFromURLAsync(this.scriptURL);
+			this.functionScripts.push(this.scriptURL);
+			this.rerenderFunctionScripts++;
+			this.scriptURL = "";
+		} catch (e) {
+			log.error("FormulaViewModel.addScript, error:", e);
+			this.loadingScriptsError = e;
+		} finally {
+			this.loadingScripts = false;
+		}
+	});
+
+	loadScripts = flow(function* () {
+		log.debug("FormulaViewModel.loadScripts");
+		this.loadingScripts = true;
+		try {
+			for (const script of this.functionScripts) {
+				yield loadScriptFromURLAsync(script);
+			}
+		} catch (e) {
+			log.error("FormulaViewModel.loadScripts, error:", e);
+			this.loadingScriptsError = e;
+		} finally {
+			this.loadingScripts = false;
+		}
+	});
+
+	removeScript(script: string): void {
+		log.debug("FormulaViewModel.removeScript, script:", script);
+		const i = this.functionScripts.findIndex((item) => item == script);
+		expect(i).to.not.equal(-1);
+		this.functionScripts.splice(i, 1);
+		this.rerenderFunctionScripts++;
+		this.showReloadBlockModal = true;
+	}
 }
 
 decorate(FormulaViewModel, {
@@ -612,9 +733,11 @@ decorate(FormulaViewModel, {
 	availableFields: computed,
 	_formula: observable,
 	formula: computed,
+	_supportedFunctions: observable,
+	supportedFunctions: computed,
 	resetResult: action,
 	formulaTextArea: observable,
-	insertFormula: action,
+	insertFunction: action,
 	disableRun: computed,
 	disableRunAndSave: computed,
 	run: action,
@@ -640,9 +763,19 @@ decorate(FormulaViewModel, {
 	updatedRecords: observable,
 	calculateInViewProgressPercent: computed,
 	calculateInViewProgressStatus: computed,
-	// calculateInView: action,
+	scriptURL: observable,
+	scriptURLAlreadyExists: computed,
+	scriptURLValidationProps: computed,
+	disableAddScriptButton: computed,
+	functionScripts: observable,
+	rerenderFunctionScripts: observable,
+	loadingScripts: observable,
+	removeScript: action,
+	showReloadBlockModal: observable,
 });
 
 const viewModel = new FormulaViewModel();
 
 export default viewModel;
+
+// PMT(InterestRate/12,NumberOfPayments,LoanAmount)
