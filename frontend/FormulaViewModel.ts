@@ -464,6 +464,7 @@ export class FormulaViewModel {
 	}
 
 	run(record: Record): any {
+		this.resetResult();
 		const values = {};
 
 		for (const field of this.availableFields) {
@@ -495,6 +496,7 @@ export class FormulaViewModel {
 
 	// TODO: Once testing is added, split into testable functions
 	calculateInView = flow(function* () {
+		this.resetResult();
 		expect(this.table).to.not.be.null;
 		expect(this.view).to.not.be.null;
 		try {
@@ -803,3 +805,4 @@ const viewModel = new FormulaViewModel();
 export default viewModel;
 
 // PMT(InterestRate/12,NumberOfPayments,LoanAmount)
+// RATE(NumberOfPayments,MonthlyPayment,LoanAmount) * 12

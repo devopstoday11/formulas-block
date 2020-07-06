@@ -18,6 +18,10 @@ https://github.com/superblocks-at/formulas-block
 block release
 ```
 
+## Known Issues
+
+- No support for field names with spaces in them. Will be added soon.
+
 ## Extending the block with dynamically loaded functions
 
 Please use the [@superblocks-at/formulajs-functions](https://www.npmjs.com/package/@superblocks-at/formulajs-functions) as a reference implementation. The package dynamically adds additional excel functions that exist in the [@formulajs/formulajs](https://www.npmjs.com/package/@formulajs/formulajs) npm package to the block.
@@ -52,6 +56,8 @@ If you need additional guidance, please create an [issue](issues).
 Are more than welcome. The goal is to have the community improve the block and expand the block's function selection so that the entire Airtable community can benefit.
 
 Some things that will benefit the community:
+
+- Add support for field names with spaces in them.
 
 - Add all the missing excel functions from [@formulajs/formulajs](https://www.npmjs.com/package/@formulajs/formulajs) to the [@superblocks-at/formulajs-functions](https://www.npmjs.com/package/@superblocks-at/formulajs-functions) package.
 
