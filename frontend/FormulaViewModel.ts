@@ -432,8 +432,13 @@ export class FormulaViewModel {
 	insertField(fieldName: string) {
 		expect(this.formulaTextArea).to.be.not.null;
 
-		this.formulaTextArea.setRangeText(fieldName);
-		this.formulaTextArea.selectionStart += fieldName.length;
+		let fieldNameToInsert = fieldName;
+		if (fieldName.indexOf(" ") >= 0) {
+			fieldNameToInsert = `{${fieldName}}`;
+		}
+
+		this.formulaTextArea.setRangeText(fieldNameToInsert);
+		this.formulaTextArea.selectionStart += fieldNameToInsert.length;
 		this.formula = this.formulaTextArea.value;
 		this.formulaTextArea.focus();
 	}
@@ -465,15 +470,12 @@ export class FormulaViewModel {
 
 	run(record: Record): any {
 		this.resetResult();
-		const values = {};
 
-		for (const field of this.availableFields) {
-			const value = record.getCellValue(field);
-			values[field.name] = value;
-		}
+		const formula = this.prepareFormulaForRun();
+		const values = this.prepareFieldsForRun(record);
 
 		try {
-			this.runResult = run(this._formula, values, this.addedFunctions);
+			this.runResult = run(formula, values, this.addedFunctions);
 			if (this.runResult != null) {
 				this.runResultFormValue = this.runResult.toString();
 			} else {
@@ -484,6 +486,37 @@ export class FormulaViewModel {
 			this.runError = e;
 			return null;
 		}
+	}
+
+	// Replace field names with spaces surrounded by {} with field ids
+	prepareFormulaForRun(): string {
+		let formula = this._formula;
+		for (const field of this.table.fields) {
+			if (field.name.indexOf(" ") >= 0) {
+				const regex = new RegExp(`{${field.name}}`, "g");
+				formula = formula.replace(regex, field.id);
+			}
+		}
+
+		log.debug("FormulaViewModel.prepareFormula, formula:", formula);
+
+		return formula;
+	}
+
+	// Replace field names with spaces with field ids in object map of values
+	prepareFieldsForRun(record: Record): { [key: string]: any } {
+		let values = {};
+		for (const field of this.table.fields) {
+			if (field.name.indexOf(" ") >= 0) {
+				values[field.id] = record.getCellValue(field.id);
+			} else {
+				values[field.name] = record.getCellValue(field.id);
+			}
+		}
+
+		log.debug("FormulaViewModel.prepareFieldsForRun, values:", values);
+
+		return values;
 	}
 
 	runAndSave(record: Record): void {
@@ -501,6 +534,7 @@ export class FormulaViewModel {
 		expect(this.view).to.not.be.null;
 		try {
 			this._view = this.view;
+			const formula = this.prepareFormulaForRun();
 
 			this.calculateInViewStatus = CalculateInViewStatus.loadingRecords;
 			const queryResult = yield this._view.selectRecordsAsync();
@@ -509,12 +543,8 @@ export class FormulaViewModel {
 
 			const recordsToUpdate = [];
 			for (const record of queryResult.records) {
-				const values = {};
-				for (const field of this.table.fields) {
-					const value = record.getCellValue(field);
-					values[field.name] = value;
-				}
-				const result = run(this._formula, values, this.extraFuncs);
+				const values = this.prepareFieldsForRun(record);
+				const result = run(formula, values, this.extraFuncs);
 				recordsToUpdate.push({
 					id: record.id,
 					fields: { [toJS(this.field.name)]: result },

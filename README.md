@@ -22,7 +22,7 @@ block release
 
 ## Known Issues
 
-- No support for field names with spaces in them. Will be added soon.
+- If calculations return errors and field type is not a string, unlike spreadsheets, there is no way of displaying the error type (such as "#ERROR!") inside the field. In a future version, the user will have to select another string field for displaying those types of errors. In the meantime, run the calculations only on views that filter out records with missing or incorrect values for fields that are part of the formula.
 
 ## Extending the block with dynamically loaded functions
 
@@ -30,7 +30,7 @@ Please use the [@superblocks-at/formulajs-functions](https://www.npmjs.com/packa
 
 In short, the steps are:
 
-1. Create an npm package with the functions you want to add.
+1. Create an npm package with the functions you want to add. Make sure to add the "formulas-superblock-functions" keyword to the keywords section in your package.json so that Formula block users can easily find your package.
 
 2. Create an object with a mapping from function names to function implementations and pass this object to window.superblocks.formulas.addFunctions():
 
