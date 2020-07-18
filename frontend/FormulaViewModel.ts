@@ -544,7 +544,7 @@ export class FormulaViewModel {
 			const recordsToUpdate = [];
 			for (const record of queryResult.records) {
 				const values = this.prepareFieldsForRun(record);
-				const result = run(formula, values, this.extraFuncs);
+				const result = run(formula, values, this.addedFunctions);
 				recordsToUpdate.push({
 					id: record.id,
 					fields: { [toJS(this.field.name)]: result },
