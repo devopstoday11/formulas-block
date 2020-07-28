@@ -16,6 +16,7 @@ import {
 import blockViewModel, { MainView } from "./BlockViewModel";
 import FormulaForm from "./FormulaForm";
 import AddFunctions from "./AddFunctions";
+import NewVersionIndicator from "./NewVersionIndicator";
 
 const FormulasBlock = observer(() => {
 	const showEditFormulaView = blockViewModel.activeView == MainView.editFormula;
@@ -35,9 +36,12 @@ const FormulasBlock = observer(() => {
 				}}
 			>
 				<BlockHeader title="Formulas">
-					<Button type="link" onClick={blockViewModel.switchView}>
-						{blockViewModel.switchViewButtonLabel}
-					</Button>
+					<div>
+						<Button type="link" onClick={blockViewModel.switchView}>
+							{blockViewModel.switchViewButtonLabel}
+						</Button>
+						<NewVersionIndicator />
+					</div>
 				</BlockHeader>
 				<StyledFormLayout>
 					<StyledFormContent>

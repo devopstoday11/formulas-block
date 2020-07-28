@@ -6,12 +6,20 @@ import React from "react";
 
 import { observer } from "mobx-react-lite";
 
-import { Form, Input, Button, List, Spin, Tooltip, Typography } from "antd";
+import {
+	Modal,
+	Form,
+	Input,
+	Button,
+	List,
+	Spin,
+	Tooltip,
+	Typography,
+} from "antd";
 const { Paragraph } = Typography;
 
 import viewModel from "./FormulaViewModel";
 import { CloseCircleOutlined } from "@ant-design/icons";
-import Modal from "antd/lib/modal/Modal";
 
 // TODO: Split to separate viewModel
 const AddScriptForm = observer(() => {

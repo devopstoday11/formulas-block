@@ -1,7 +1,22 @@
 {
+	"private": true,
+	"version": "0.9.0",
+	"homepage": "https://github.com/superblocks-at/formulas-block",
+	"repository": "github.com:superblocks-at/formulas-block",
+	"bugs": {
+		"url": "https://github.com/superblocks-at/formulas-block/issues",
+		"email": "support@superblocks.at"
+	},
+	"displayName": "Formulas Block by Superblocks",
+	"github": {
+		"owner": "superblocks-at",
+		"repo": "formulas-block"
+	},
+	"releaseNotes": "https://github.com/superblocks-at/formulas-block",
 	"dependencies": {
 		"@airtable/blocks": "0.0.53",
 		"@ant-design/icons": "^4.2.1",
+		"@octokit/core": "^3.1.1",
 		"@superblocks-at/formula": "^3.15.0",
 		"antd": "^4.4.0",
 		"chai": "^4.2.0",
@@ -11,18 +26,23 @@
 		"mobx-utils": "^5.6.1",
 		"react": "^16.9.0",
 		"react-dom": "^16.9.0",
+		"semver": "^7.3.2",
 		"styled-components": "^5.1.1"
 	},
 	"devDependencies": {
 		"@airtable/blocks-cli": "0.0.54",
+		"@types/chai": "^4.2.12",
 		"@typescript-eslint/eslint-plugin": "^3.0.2",
 		"@typescript-eslint/parser": "^2.15.0",
 		"eslint": "^6.3.0",
 		"eslint-plugin-react": "^7.14.3",
 		"eslint-plugin-react-hooks": "^2.0.1",
+		"release-it": "^13.6.6",
 		"typescript": "^3.9.3"
 	},
 	"scripts": {
+		"start": "block run",
+		"release": "block release",
 		"lint": "eslint --ext .js,.jsx,.ts,.tsx frontend"
 	}
 }
